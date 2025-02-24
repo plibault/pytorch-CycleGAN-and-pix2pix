@@ -1,4 +1,5 @@
-"""General-purpose training script for image-to-image translation.
+"""
+General-purpose training script for image-to-image translation.
 
 This script works for various models (with option '--model': e.g., pix2pix, cyclegan, colorization) and
 different datasets (with option '--dataset_mode': e.g., aligned, unaligned, single, colorization).
@@ -18,11 +19,15 @@ See options/base_options.py and options/train_options.py for more training optio
 See training and test tips at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/tips.md
 See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/qa.md
 """
+
 import time
 from options.train_options import TrainOptions
 from data import create_dataset
 from models import create_model
 from util.visualizer import Visualizer
+import torchvision.transforms as transforms
+
+import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()   # get training options
@@ -30,11 +35,31 @@ if __name__ == '__main__':
     dataset_size = len(dataset)    # get the number of images in the dataset.
     print('The number of training images = %d' % dataset_size)
 
+    dataset.dataset.transform_A = transforms.Compose([
+        transforms.Resize((128,128)),
+        transforms.RandomRotation(degrees=[90,90]),  # Rotate by exactly 90 degrees
+        transforms.RandomHorizontalFlip(p=0.5),  # Randomly flip horizontally
+        # transforms.RandomVerticalFlip(p=0.5),  # Randomly flip vertically
+        transforms.ColorJitter(brightness=0.1),  # Adjust brightness factor
+        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.9, 1.1)),  # Small translation and scale
+        transforms.ToTensor(),
+        transforms.Normalize((0.5,), (0.5,))
+    ])
+
+    dataset.dataset.transform_B = transforms.Compose([
+        transforms.Resize((128,128)),
+        transforms.RandomHorizontalFlip(p=0.5),  # Randomly flip horizontally
+        transforms.ColorJitter(brightness=0.1),  # Different brightness factor
+        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.95, 1.15)),  # Slightly smaller translation and scale
+        transforms.ToTensor(),
+        transforms.Normalize((0.5,), (0.5,))
+    ])
+
     model = create_model(opt)      # create a model given opt.model and other options
     model.setup(opt)               # regular setup: load and print networks; create schedulers
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
     total_iters = 0                # the total number of training iterations
-
+    print(type(dataset.dataset))
     for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):    # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
         epoch_start_time = time.time()  # timer for entire epoch
         iter_data_time = time.time()    # timer for data loading per iteration
@@ -42,6 +67,14 @@ if __name__ == '__main__':
         visualizer.reset()              # reset the visualizer: make sure it saves the results to HTML at least once every epoch
         model.update_learning_rate()    # update learning rates in the beginning of every epoch.
         for i, data in enumerate(dataset):  # inner loop within one epoch
+            
+            # plt.subplot(2,1,1)
+            # plt.imshow(data["A"][0,0].cpu(),cmap="gray")
+            # plt.subplot(2,1,2)
+            # plt.imshow(data["B"][0,0].cpu(),cmap="gray")
+            # plt.savefig("./temp_.png")
+            # plt.close()
+
             iter_start_time = time.time()  # timer for computation per iteration
             if total_iters % opt.print_freq == 0:
                 t_data = iter_start_time - iter_data_time

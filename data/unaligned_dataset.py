@@ -55,6 +55,7 @@ class UnalignedDataset(BaseDataset):
             index_B = random.randint(0, self.B_size - 1)
         B_path = self.B_paths[index_B]
         A_img = Image.open(A_path).convert('RGB')
+        # print(B_path)
         B_img = Image.open(B_path).convert('RGB')
         # apply image transformation
         A = self.transform_A(A_img)
