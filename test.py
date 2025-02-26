@@ -33,6 +33,7 @@ from models import create_model
 from util.visualizer import save_images
 from util import html
 
+import torchvision.transforms as transforms
 try:
     import wandb
 except ImportError:
@@ -48,8 +49,20 @@ if __name__ == '__main__':
     opt.display_id = -1   # no visdom display; the test code saves the results to a HTML file.
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
     model = create_model(opt)      # create a model given opt.model and other options
-    model.setup(opt)               # regular setup: load and print networks; create schedulers
+    model.setup(opt)    
 
+    dataset.dataset.transform_A = transforms.Compose([
+        transforms.Resize((128,128)),
+        transforms.RandomRotation(degrees = [90,90]),  # Rotate by exactly 90 degrees
+        transforms.ToTensor(),
+        transforms.Normalize((0.5,), (0.5,))
+    ])
+
+    dataset.dataset.transform_B = transforms.Compose([
+        transforms.Resize((128,128)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5,), (0.5,))
+    ])
     # initialize logger
     if opt.use_wandb:
         wandb_run = wandb.init(project=opt.wandb_project_name, name=opt.name, config=opt) if not wandb.run else wandb.run

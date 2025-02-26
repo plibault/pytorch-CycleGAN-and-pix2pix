@@ -40,7 +40,7 @@ if __name__ == '__main__':
         transforms.RandomRotation(degrees=[90,90]),  # Rotate by exactly 90 degrees
         transforms.RandomHorizontalFlip(p=0.5),  # Randomly flip horizontally
         # transforms.RandomVerticalFlip(p=0.5),  # Randomly flip vertically
-        transforms.ColorJitter(brightness=0.1),  # Adjust brightness factor
+        transforms.ColorJitter(brightness=0.05),  # Adjust brightness factor
         transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.9, 1.1)),  # Small translation and scale
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
@@ -49,8 +49,8 @@ if __name__ == '__main__':
     dataset.dataset.transform_B = transforms.Compose([
         transforms.Resize((128,128)),
         transforms.RandomHorizontalFlip(p=0.5),  # Randomly flip horizontally
-        transforms.ColorJitter(brightness=0.1),  # Different brightness factor
-        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.95, 1.15)),  # Slightly smaller translation and scale
+        transforms.ColorJitter(brightness=0.05),  # Different brightness factor
+        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.9, 1.1)),  # Slightly smaller translation and scale
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
